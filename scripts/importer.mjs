@@ -3,6 +3,7 @@ import {compileBundle, documentNameFor, replaceReferences} from "./compiler.mjs"
 import {ContentResolver} from "./resolver.mjs";
 import {normalizeBundle} from "./schema.mjs";
 import {clone, digest, featureContext, randomID, unique} from "./utils.mjs";
+import {supportedSystem,versionParts} from "./compatibility.mjs";
 
 // The directory window, settings window and API must share the same write lock.
 const activeWrites=new WeakSet();
@@ -15,10 +16,13 @@ export function checkEnvironment(env=globalThis) {
   if(game?.system?.id!=="dnd5e")errors.push("This importer requires the D&D5e system.");
   const major=Number(String(game?.version??game?.release?.version??"").split(".")[0]);
   if(major!==14)errors.push("This release targets Foundry v14.");
-  const system=String(game?.system?.version??"").split(".").map(Number);
-  if(system[0]!==5||system[1]<3||(system[1]===3&&system[2]<3))errors.push("This release targets D&D5e 5.3.3 through 5.x; D&D5e 6 needs a separate adapter.");
+  const system=versionParts(game?.system?.version);
+  if(!supportedSystem(game?.system?.version))errors.push("This release supports D&D5e 5.3.3–5.x and 6.x (schema reviewed against 6.0.6).");
   const midi=game?.modules?.get("midi-qol");
-  if(!midi?.active||!/^14\./.test(midi.version??""))errors.push("Enable a compatible Midi-QOL 14 version and its dependencies.");
+  const midiVersion=versionParts(midi?.version);
+  if(!midi?.active||midiVersion?.[0]!==14)errors.push("Enable a compatible Midi-QOL 14 version and its dependencies.");
+  else if(system?.[0]===6&&midiVersion[1]<6)errors.push("D&D5e 6 requires Midi-QOL 14.6 or later in the v14 line, with its compatible dependencies. Install that line using the manifest linked in the importer's README.");
+  else if(system?.[0]===5&&midiVersion[1]>=6)errors.push("D&D5e 5 requires the Midi-QOL 14.0 line; Midi-QOL 14.6 targets D&D5e 6.");
   return errors;
 }
 export class FoundryAdapter {
@@ -37,6 +41,17 @@ export class FoundryAdapter {
       if(expected.system?.activities&&Object.keys(actual.system?.activities??{}).length!==Object.keys(expected.system.activities).length)throw new Error("An activity was removed during schema validation.");
       if(expected.effects?.length!==undefined&&actual.effects?.length!==expected.effects.length)throw new Error("An effect was removed during schema validation.");
       for(const effect of actual.effects??[])if(expected.effects.some(e=>e._id===effect._id&&e.system?.changes?.length)&&!effect.system?.changes?.length)throw new Error("An Active Effect lost its v14 changes during validation.");
+      const advancements=Object.values(expected.system?.advancement??{}),validated=Object.values(actual.system?.advancement??{});
+      if(advancements.length!==validated.length||advancements.some(a=>!validated.some(b=>a._id===b._id&&a.type===b.type)))throw new Error("An advancement was removed during schema validation.");
+      for(const a of advancements){
+        const b=validated.find(b=>b._id===a._id);
+        if(a.type==="ItemGrant"&&JSON.stringify(a.configuration.items.map(i=>i.uuid))!==JSON.stringify(b.configuration?.items?.map(i=>i.uuid)))throw new Error("Class feature references changed during schema validation.");
+      }
+      const check=(label,before,after)=>{if(before!==undefined&&String(before)!==String(after))throw new Error(`${label} changed during schema validation.`);};
+      check("Fixed armor class",expected.system?.attributes?.ac?.override,actual.system?.attributes?.ac?.override);
+      for(const [key,value]of Object.entries(expected.system?.attributes?.movement?.speeds??{}))check(`Movement ${key}`,value,actual.system?.attributes?.movement?.speeds?.[key]);
+      for(const [key,value]of Object.entries(expected.system?.abilities??{}))check(`Saving throw bonus ${key}`,value.save?.roll?.bonus,actual.system?.abilities?.[key]?.save?.roll?.bonus);
+      for(const [key,value]of Object.entries(expected.system?.skills??{}))check(`Skill bonus ${key}`,value.roll?.bonus,actual.system?.skills?.[key]?.roll?.bonus);
       for(const item of expected.items??[]){const child=actual.items?.find(x=>x._id===item._id);if(!child)throw new Error(`Embedded item was removed: ${item.name}`);verifyContents(item,child);}
       for(const result of expected.results??[]){const child=actual.results?.find(x=>x._id===result._id);if(!child||child.description!==result.description)throw new Error("Roll table result text was removed during schema validation.");}
     }
@@ -70,7 +85,10 @@ export class ImportService {
     const bases=new Map();
     async function baseWalk(entry,parent="") {const key=parent?`${parent}/${entry.id}`:entry.id;const base=await resolver.baseFor(entry);if(base)bases.set(key,base);for(const child of entry.features)await baseWalk(child,key);}
     for(const entry of bundle.entries)await baseWalk(entry);
-    const plan=compileBundle(bundle,{bases});plan.bundle=bundle;plan.id=randomID();plan.resolver=resolver;plan.includePacks=includePacks;plan.warnings=[...bundle.warnings,...resolver.failures.map(x=>`Compendium unavailable: ${x}`)];
+    const plan=compileBundle(bundle,{bases,systemVersion:this.env.game.system.version});plan.bundle=bundle;plan.id=randomID();plan.resolver=resolver;plan.includePacks=includePacks;plan.warnings=[...bundle.warnings,...resolver.failures.map(x=>`Compendium unavailable: ${x}`)];
+    // D&D5e 6 ItemGrant uses DocumentUUIDField. Validate prospective UUIDs,
+    // then resolve the original placeholders to actual destinations at commit.
+    const previewUUIDs=new Map(plan.nodes.map(n=>[n.key,`${n.documentName}.${n.data._id}`]));
     for(const node of plan.nodes){
       if(signal?.aborted)throw new DOMException("Cancelled","AbortError");
       if(node.documentName==="Actor")await resolver.embedSpells(node,{signal});
@@ -79,7 +97,7 @@ export class ImportService {
       if(picked.ambiguous)node.warnings.push("Several matching documents exist; choose Create copies or resolve the duplicates before importing.");
       if(picked.ambiguous)node.ambiguousDuplicate=true;
       if(node.entry.item.baseItem&&!bases.has(node.key))node.warnings.push(`No unique ${node.entry.rules} base item found: ${node.entry.item.baseItem}. Review missing weapon/armor fields.`);
-      try{await this.adapter.validate(node);}catch(error){node.errors.push(`Foundry validation: ${error.message}`);}
+      try{await this.adapter.validate({...node,data:replaceReferences(node.data,previewUUIDs)});}catch(error){node.errors.push(`Foundry validation: ${error.message}`);}
       node.warnings=unique(node.warnings);
     }
     plan.fingerprint=fingerprint(plan);

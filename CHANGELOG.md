@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.2
+
+- Fixed the system compatibility cap that blocked D&D5e 6.0.6, and allowed its Midi-QOL 14.6 release line. Runtime checks explain mismatched automation versions.
+- Added a D&D5e 6 adapter for persisted AC, movement speeds, save/skill bonuses, passive effect keys, item rarities and named advancements. D&D5e 5.3.3 support and the independent 2014/2024 rules selection remain available.
+- Validate prospective ItemGrant UUIDs before document creation, then resolve them to actual world or compendium destinations. Detect removed advancements and altered critical actor fields in live preflight.
+- Fixed empty activity durations and added compatibility regression tests. Updated setup instructions with the required Midi-QOL/DAE release lines.
+- Live Foundry/Midi-QOL acceptance remains pending.
+
 ## 0.1.1
 
 - First GitHub publication with a permanent Foundry installation/update manifest and versioned download ZIP.

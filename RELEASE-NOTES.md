@@ -1,15 +1,17 @@
-# Tely's DND Importer 0.1.1
+# Tely's DND Importer 0.1.2
 
-First public development release for Foundry VTT v14, D&D5e 5.3.3–5.x and Midi-QOL 14.0–14.5.
+Compatibility fix for Foundry v14 with D&D5e 6.0.6. The importer previously blocked system 6 in both its package manifest and runtime checks.
 
-- Import creatures, spells, equipment, classes, subclasses, features and other supported content from text, clear English screenshots or public web pages.
-- Built-in English image reading runs locally with all assets included. Optional Ollama or compatible model extraction supports more complex layouts.
-- Review native activities, effects, progression and automation warnings before creating documents. Unsupported mechanics remain flagged for review.
-- Includes duplicate checks, world/compendium destinations, import history and guarded undo.
-- Permanent installation/update manifest and versioned package downloads.
+- Added version 6 output for persisted AC, movement, roll bonuses, passive effects, rarities and class advancements.
+- Fixed preflight validation of class-feature UUIDs under the version 6 schema, with additional guards against stripped advancements and changed actor fields.
+- Allows Midi-QOL 14.6; explains incompatible automation release lines. D&D5e 5.3.3–5.x remains supported with its previous automation line.
+- Keeps the independent 2014/2024 rules selector. 2014 rules work with D&D5e 6 software.
+- Built-in image reading and optional Ollama extraction remain available.
 
-Install through Foundry Setup → Add-on Modules → Install Module using:
+**For D&D5e 6.0.6:** install Midi-QOL 14.6 and DAE 14.6 using their authors' explicit manifests, then enable their dependencies and the importer. Regular package-directory updates may still offer the older 14.0 line. The README includes the exact links and steps.
+
+Update the importer through Foundry Setup → Add-on Modules → Check for Update → Update. Its permanent manifest remains:
 
 https://github.com/Telynor/telys-dnd-importer/releases/latest/download/module.json
 
-79 JavaScript tests and 11 companion tests passed. Browser OCR and mocked model-request checks passed on the preceding development build. Live Foundry/Midi-QOL combat workflows remain unverified; start with the supplied examples in a test world. See README.md and VALIDATION.md for setup, supported mechanics and limits.
+94 JavaScript and 11 Python companion tests passed. Reviewed the official D&D5e 6.0.6 models and Midi-QOL 14.6.0 source. Live Foundry document creation and Midi-QOL combat workflows remain unverified; try the supplied example in a test world first. See VALIDATION.md for the precise scope.

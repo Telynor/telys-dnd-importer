@@ -1,6 +1,6 @@
 # Tely's DND Importer
 
-**0.1.1 — an installable development build for Foundry v14, D&D5e 5.3.3–5.x, and Midi-QOL 14.0.x.**
+**0.1.2 — an installable development build for Foundry v14 and D&D5e 5.3.3–5.x or 6.x (schema reviewed against 6.0.6). Choose the matching Midi-QOL release line below.**
 
 Import D&D content from pasted text, image attachments, and public web links. A bundled English OCR reader reads clear screenshots locally without an account, model, companion, API key, or runtime download. Optional Ollama or compatible vision extraction handles more complex layouts. The importer extracts a reviewable intermediate format and compiles supported mechanics into native D&D5e activities, Active Effects, advancement, and Midi-QOL data. Original source text accompanies the imported document.
 
@@ -13,14 +13,23 @@ This build has automated parser/compiler/transaction tests and browser tests usi
 
    `https://github.com/Telynor/telys-dnd-importer/releases/latest/download/module.json`
 
-3. Open a D&D5e world using system version 5.3.3–5.x, enable Midi-QOL 14 and its required dependencies, then enable **Tely's DND Importer** in Manage Modules.
+3. Enable the Midi-QOL version matching your installed D&D5e software version and its required dependencies (see the table below), then enable **Tely's DND Importer** in Manage Modules.
 4. Click **DND Importer** in the Actors, Items, or Compendium sidebar, or open **Configure Settings → Tely's DND Importer → Open DND Importer**.
 
 For future published releases, use Foundry's **Check for Update / Update** controls. The manifest URL stays the same. If you previously installed the development ZIP, stop Foundry and remove the old `Data/modules/telys-dnd-importer` folder before installing through the manifest, so the installed copy has its update information. World documents already imported remain in the world.
 
 For manual installation, extract the release ZIP and put its `telys-dnd-importer` directory in `Data/modules/`, then restart Foundry.
 
-This is an early development release. Do not use it with D&D5e 6; that system version needs a separate adapter. The `2014/2024` selector controls the content's rules edition, independently of the installed system's software version.
+### Match your D&D5e and automation versions
+
+| Installed D&D5e software | Midi-QOL | DAE |
+| --- | --- | --- |
+| 6.x, including 6.0.6 | 14.6 line | 14.6 line |
+| 5.3.3–5.x | 14.0 line | Compatible 14.0 line |
+
+For **D&D5e 6.0.6**, the authors currently provide the compatible automation releases through explicit manifests. In Foundry Setup → Add-on Modules → Install Module, use the [Midi-QOL 14.6 manifest](https://gitlab.com/tposney/midi-qol/-/releases/v14.6.0/downloads/module.json) and the [DAE 14.6 manifest](https://gitlab.com/tposney/dae/-/releases/v14.6.0/downloads/module.json). Let Foundry install their dependencies, including libWrapper and socketlib. Check that the installed versions say **14.6**, then enable them in the world. The regular package-directory release can still offer 14.0; checking for updates alone may not switch release lines.
+
+This is an early development release. D&D5e 6 output uses its persisted AC override, movement speeds, roll bonuses, rarities and named advancement data. Feature UUIDs are checked before writes. These changes were reviewed against the official 6.0.6 sources and covered by regression tests; they still need live Foundry/Midi-QOL acceptance. The `2014/2024` selector controls the content's rules edition, independently of the installed system's software version. **You can keep 2014 content rules on D&D5e 6.0.6.**
 
 ## First import
 
@@ -177,6 +186,9 @@ For live acceptance, import the watcher, place it and a target on a test scene, 
 - [Foundry v14 ActiveEffect schema](https://foundryvtt.com/api/classes/foundry.documents.BaseActiveEffect.html)
 - [Foundry v14 effect duration data](https://foundryvtt.com/api/interfaces/foundry.documents.types.EffectDurationData.html)
 - [Foundry v14 TableResult schema](https://foundryvtt.com/api/classes/foundry.documents.BaseTableResult.html)
+- [D&D5e 6.0.6 data models](https://github.com/foundryvtt/dnd5e/tree/release-6.0.6/module/data)
+- [Midi-QOL compatibility and release-line manifests](https://foundryvtt.com/packages/midi-qol)
+- [DAE compatibility and release-line manifests](https://foundryvtt.com/packages/dae)
 - [D&D5e 5.3.3 activity data models](https://github.com/foundryvtt/dnd5e/tree/release-5.3.3/module/data/activity)
 - [D&D5e 5.3.3 item and advancement data models](https://github.com/foundryvtt/dnd5e/tree/release-5.3.3/module/data)
 - [Midi-QOL v14 activity mixin](https://gitlab.com/tposney/midi-qol/-/blob/v14/src/module/activities/MidiActivityMixin.ts)

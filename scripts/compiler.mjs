@@ -1,6 +1,7 @@
 import {ABILITIES, DAMAGE_TYPES, ICONS, ID, SKILLS, VERSION} from "./constants.mjs";
 import {clone, digest, normalizeName, number, paragraphHTML, randomID, slug, unique} from "./utils.mjs";
 import {inferMultiattack} from "./mechanics.mjs";
+import {adaptDocumentForSystem} from "./compatibility.mjs";
 
 const seconds={round:6,minute:60,hour:3600,day:86400};
 export const documentNameFor = kind => ["creature","character"].includes(kind)?"Actor":kind==="journal"?"JournalEntry":kind==="table"?"RollTable":"Item";
@@ -15,7 +16,7 @@ function usesData(uses) {
 function activityBase(entry,type,id=randomID()) {
   const m=entry.mechanics;
   const target={affects:{type:m.target?.type??(m.healing?"creature":""),count:m.target?.count!=null?String(m.target.count):"",choice:false,special:""},template:{type:m.target?.area??"",size:m.target?.size!=null?String(m.target.size):"",width:m.target?.width!=null?String(m.target.width):"",height:m.target?.height!=null?String(m.target.height):"",units:m.target?.units??"ft",count:m.target?.area?"1":"",contiguous:false,stationary:false}};
-  const duration={value:m.duration?.value!=null?String(m.duration.value):"",units:m.duration?.units??"",concentration:m.duration?.concentration??false,override:entry.kind!=="spell"};
+  const duration={value:m.duration?.value!=null?String(m.duration.value):"",units:m.duration?.units||"inst",concentration:m.duration?.concentration??false,override:entry.kind!=="spell"};
   const rangeValue=m.attack?.kind==="melee"?m.range?.reach??m.range?.value:m.range?.value;
   return {_id:id,type,name:entry.name,activation:{type:m.activation?.type??"action",value:m.activation?.value??1,condition:m.activation?.condition??"",override:entry.kind!=="spell"},consumption:{spellSlot:entry.kind==="spell"&&entry.item.level>0,targets:m.uses?.max?[{type:"itemUses",target:"",value:"1",scaling:{mode:"",formula:""}}]:[],scaling:{allowed:!!m.damage.find(d=>d.scaling)||!!m.healing?.scaling,max:""}},duration,range:{value:rangeValue!=null?String(rangeValue):"",units:m.range?.units??(m.attack?.kind==="melee"?"touch":"ft"),special:m.range?.special??"",override:entry.kind!=="spell"},target:{...target,override:entry.kind!=="spell",prompt:true},uses:{spent:0,max:"",recovery:[]},effects:[],flags:{[ID]:{generated:true}},otherActivityId:"none",midiProperties:{confirmTargets:"default",automationOnly:false,otherActivityCompatible:true,autoTargetType:"any",autoTargetAction:"default",magicDamage:entry.kind==="spell"||entry.item.magicalBonus>0,targetMustBeSeen:/\byou can see\b/i.test(entry.text)}};
 }
@@ -188,7 +189,7 @@ export function compileActor(entry,{id}={}) {
   return {data,warnings:unique(warnings)};
 }
 
-export function compileBundle(bundle,{bases=new Map()}={}) {
+export function compileBundle(bundle,{bases=new Map(),systemVersion=globalThis.game?.system?.version??"5.3.3"}={}) {
   const nodes=[],roots=[];
   function add(entry,parentKey="",parentEntry=null) {
     const key=parentKey?`${parentKey}/${entry.id}`:entry.id;
@@ -210,6 +211,7 @@ export function compileBundle(bundle,{bases=new Map()}={}) {
       const check=feature=>{errors.push(...feature.errors.map(error=>`${feature.name}: ${error}`));feature.features.forEach(check);};
       entry.features.forEach(check);
     }
+    adaptDocumentForSystem(result.data,systemVersion);
     nodes.push({key,parentKey,entry,documentName,type:documentTypeFor(entry.kind),data:result.data,dependsOn:childKeys,warnings:unique(result.warnings),errors,selected:true});
     return key;
   }

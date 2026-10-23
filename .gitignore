@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+node_modules/
+/dist/
+/deliverables/
+/vendor/ocr/core/
+/vendor/ocr/lang/
+/vendor/ocr/tesseract.esm.min.js
+/vendor/ocr/worker.min.js

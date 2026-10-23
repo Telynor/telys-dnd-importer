@@ -1,0 +1,14 @@
+export const ID = "telys-dnd-importer";
+export const TITLE = "Tely's DND Importer";
+export const VERSION = "0.1.1";
+export const KINDS = ["creature", "character", "spell", "weapon", "equipment", "consumable", "tool", "loot", "container", "feat", "background", "race", "class", "subclass", "facility", "journal", "table"];
+export const ABILITIES = {strength:"str", dexterity:"dex", constitution:"con", intelligence:"int", wisdom:"wis", charisma:"cha"};
+export const DAMAGE_TYPES = ["acid","bludgeoning","cold","fire","force","lightning","necrotic","piercing","poison","psychic","radiant","slashing","thunder"];
+export const CONDITIONS = ["blinded","charmed","deafened","frightened","grappled","incapacitated","invisible","paralyzed","petrified","poisoned","prone","restrained","stunned","unconscious"];
+export const SCHOOLS = {abjuration:"abj",conjuration:"con",divination:"div",enchantment:"enc",evocation:"evo",illusion:"ill",necromancy:"nec",transmutation:"trs"};
+export const SKILLS = {acrobatics:["acr","dex"],"animal handling":["ani","wis"],arcana:["arc","int"],athletics:["ath","str"],deception:["dec","cha"],history:["his","int"],insight:["ins","wis"],intimidation:["itm","cha"],investigation:["inv","int"],medicine:["med","wis"],nature:["nat","int"],perception:["prc","wis"],performance:["prf","cha"],persuasion:["per","cha"],religion:["rel","int"],"sleight of hand":["slt","dex"],stealth:["ste","dex"],survival:["sur","wis"]};
+export const ICONS = {creature:"icons/svg/mystery-man.svg",character:"icons/svg/mystery-man.svg",spell:"icons/svg/book.svg",weapon:"icons/svg/sword.svg",class:"icons/svg/upgrade.svg",subclass:"icons/svg/upgrade.svg",feat:"icons/svg/aura.svg",race:"icons/svg/angel.svg",background:"icons/svg/book.svg",table:"icons/svg/d20-grey.svg",journal:"icons/svg/book.svg"};
+export const MAX_TEXT = 120000;
+export const MAX_ENTRIES = 200;
+export const MAX_IMAGES = 8;
+export const MAX_IMAGE_BYTES = 20 * 1024 * 1024;

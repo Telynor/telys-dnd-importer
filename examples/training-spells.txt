@@ -1,0 +1,20 @@
+Stormglass Burst
+2nd-level evocation
+Casting Time: 1 action
+Range: 60 feet
+Components: V, S
+Duration: Instantaneous
+
+You create a burst of stormglass at a point within range. Each creature in a 10-foot-radius sphere must make a Dexterity saving throw. A creature takes 3d6 lightning damage on a failed save, or half as much damage on a successful one.
+At Higher Levels. The damage increases by 1d6 for each slot level above 2nd.
+
+---
+
+Mending Pulse
+1st-level evocation
+Casting Time: 1 bonus action
+Range: Touch
+Components: V, S
+Duration: Instantaneous
+
+A creature you touch regains 1d8 + your spellcasting ability modifier hit points.

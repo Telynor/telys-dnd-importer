@@ -1,0 +1,18 @@
+Clockwarden
+Hit Dice: 1d8 per clockwarden level
+Armor: Light armor, shields
+Weapons: Simple weapons
+Saving Throws: Intelligence, Constitution
+Skills: Choose two from Arcana, History, Investigation, and Perception
+Spellcasting Progression: none
+
+Class Features
+
+Level 1: Borrowed Moment
+As a bonus action, you gain 1d4 temporary hit points. You can use this feature 3 times before finishing a long rest.
+
+Level 2: Pendulum Strike
+As an action, make a melee spell attack against one creature. On a hit, the target takes 2d6 force damage.
+
+Level 4: Ability Score Improvement
+Increase one ability score of your choice by 2, or increase two ability scores of your choice by 1. You cannot increase an ability score above 20 using this feature.

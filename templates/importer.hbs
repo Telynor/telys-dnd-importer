@@ -1,0 +1,99 @@
+<div class="tdi-shell">
+  <header class="tdi-masthead">
+    <div class="tdi-mark"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+    <div><p class="tdi-eyebrow">FROM SOURCE TO SHEET</p><h1>{{title}}</h1><p>Text, images & links · Native D&D5e content · Midi-QOL automation</p></div>
+    <span class="tdi-version">{{version}}</span>
+  </header>
+  <nav class="tdi-nav" aria-label="Importer sections">
+    {{#each tabs}}<button type="button" data-action="view" data-view="{{id}}" class="{{#if active}}active{{/if}}" {{#if ../busy}}disabled{{/if}}><i class="{{icon}}"></i> {{label}}</button>{{/each}}
+  </nav>
+  <div class="tdi-notices" aria-live="polite">
+    {{#each environmentErrors}}<p class="tdi-alert error">{{this}}</p>{{/each}}
+    {{#if error}}<p class="tdi-alert error">{{error}}</p>{{/if}}
+    <p class="tdi-status" role="status">{{status}}</p>
+  </div>
+  <main class="tdi-body">
+    {{#if isSource}}
+    <div class="tdi-source-grid">
+      <section class="tdi-panel tdi-source-text">
+        <div class="tdi-panel-heading"><h2>Bring your source</h2><button type="button" class="tdi-link" data-action="loadExample" {{#if busy}}disabled{{/if}}>Load example</button></div>
+        <label for="tdi-input">Paste text or import JSON</label>
+        <textarea id="tdi-input" name="input" spellcheck="false" placeholder="Paste a statblock, spell, item, class, or other D&D content. Separate entries with a line containing ---." {{#if busy}}disabled{{/if}}>{{input}}</textarea>
+        <p class="tdi-hint">Full rules text is kept with the imported content. Missing creature statistics must be corrected before import.</p>
+        {{#if hasOCRText}}<details open><summary>Text read from images</summary><textarea class="tdi-ocr-output" readonly spellcheck="false" aria-label="Recognized image text">{{ocrText}}</textarea><button type="button" data-action="useImageText" {{#if busy}}disabled{{/if}}>Use as editable source text</button><p class="tdi-hint">Check numbers and names against the image. Move this text to the source box to correct it or separate entries with ---.</p></details>{{/if}}
+        <label for="tdi-urls">Web links <span class="tdi-muted">one per line</span></label>
+        <textarea id="tdi-urls" name="urls" class="tdi-urls" placeholder="https://…" {{#if busy}}disabled{{/if}}>{{urls}}</textarea>
+        <p class="tdi-hint">For pages that block direct requests, run the included companion or paste the visible content.</p>
+      </section>
+      <aside class="tdi-source-side">
+        <section class="tdi-panel">
+          <h2>Import settings</h2>
+          <label>Content type<select name="kind" {{#if busy}}disabled{{/if}}>{{#each kindOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+          <label>Rules edition<select name="rules" {{#if busy}}disabled{{/if}}>{{#each rulesOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+          <label>Extraction<select name="engine" {{#if busy}}disabled{{/if}}>{{#each engineOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+          <label class="tdi-checkbox"><input type="checkbox" name="includePacks" {{#if includePacks}}checked{{/if}} {{#if busy}}disabled{{/if}}> Match installed compendiums</label>
+          <p class="tdi-hint">Matches require the same name, type, and explicit rules edition. Different editions stay separate.</p>
+        </section>
+        <section class="tdi-panel tdi-drop" aria-label="Attach source files">
+          <i class="fa-solid fa-images tdi-drop-icon"></i><h2>Drop images or text files</h2><p>Or paste a screenshot into this window.</p>
+          <button type="button" data-action="chooseFiles" {{#if busy}}disabled{{/if}}>Choose files</button><input name="sourceFiles" type="file" accept="image/png,image/jpeg,image/webp,.txt,.md,.json" multiple hidden>
+          <p class="tdi-hint">Up to 8 images / 20 MB. The built-in reader works locally with clear English text. Choose model extraction for complex layouts.</p>
+          {{#if hasImages}}<div class="tdi-images">{{#each images}}<figure><img src="{{url}}" alt="{{name}}"><figcaption>{{name}}</figcaption><button type="button" data-action="removeImage" data-index="{{index}}" aria-label="Remove {{name}}" {{#if ../busy}}disabled{{/if}}>×</button></figure>{{/each}}</div>{{/if}}
+        </section>
+      </aside>
+    </div>
+    {{/if}}
+    {{#if isReview}}
+      {{#if hasPlan}}
+      <div class="tdi-review-heading"><div><h2>Review {{rootCount}} entries</h2><p>Inspect activities, effects, source text, and any corrections before importing.</p></div><div class="tdi-toolbar"><button type="button" data-action="exportJSON">Export import JSON</button><button type="button" data-action="exportReport">Export report</button></div></div>
+      {{#if stale}}<p class="tdi-alert review">The source or review JSON changed. Analyze again or rebuild the JSON before importing.</p>{{/if}}
+      {{#each planWarnings}}<p class="tdi-alert review">{{this}}</p>{{/each}}
+      <div class="tdi-review-options">
+        <label>Duplicates<select name="duplicates">{{#each duplicateOptions}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>
+        <label>World folder<input name="folderName" type="text" value="{{folderName}}"></label>
+      </div>
+      <details class="tdi-destinations"><summary>Choose destination compendiums</summary><div class="tdi-pack-grid">{{#each packGroups}}<label>{{label}}<select name="pack-{{type}}">{{#each options}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label>{{/each}}</div><p class="tdi-hint">Only unlocked compendiums with the correct document type are listed.</p></details>
+      <div class="tdi-entries">
+        {{#each rows}}
+        <article class="tdi-entry {{#if dependency}}dependency{{/if}}">
+          <div class="tdi-entry-heading">{{#unless dependency}}<input type="checkbox" data-entry-select="{{key}}" aria-label="Select {{name}}" {{#if selected}}checked{{/if}} {{#if ../busy}}disabled{{/if}}>{{/unless}}<div><h3>{{name}}</h3><span class="tdi-muted">{{kind}}{{#if dependency}} · granted feature{{/if}}</span></div><span class="tdi-badge {{statusClass}}">{{status}}</span></div>
+          <div class="tdi-counts"><span><i class="fa-solid fa-bolt"></i> {{activities}} activities</span><span><i class="fa-solid fa-sparkles"></i> {{effects}} effects</span>{{#each tags}}<span class="tdi-tag">{{this}}</span>{{/each}}</div>
+          {{#each errors}}<p class="tdi-issue error">{{this}}</p>{{/each}}
+          {{#each warnings}}<p class="tdi-issue review">{{this}}</p>{{/each}}
+          {{#if duplicate}}<p class="tdi-issue existing">Existing content: <button type="button" class="tdi-link" data-action="openDocument" data-uuid="{{duplicate.uuid}}">{{duplicate.name}}</button></p>{{/if}}
+          <details><summary>Source text</summary><p class="tdi-muted">{{source}}</p><pre class="tdi-source-preview">{{description}}</pre></details>
+          <details><summary>Generated Foundry data</summary><pre class="tdi-data-preview">{{details}}</pre></details>
+        </article>
+        {{/each}}
+      </div>
+      <details class="tdi-json"><summary>Correct extracted content as JSON</summary><p class="tdi-hint">Edit normalized values, mechanics, feature levels, or progression. Rebuild to validate the changes.</p><textarea name="bundleJSON" spellcheck="false">{{bundleJSON}}</textarea><button type="button" data-action="applyJSON" {{#if busy}}disabled{{/if}}>Validate & rebuild JSON</button></details>
+      {{else}}<div class="tdi-empty"><i class="fa-solid fa-list-check"></i><h2>Your import preview appears here</h2><p>Add source content and choose Analyze source.</p></div>{{/if}}
+    {{/if}}
+    {{#if isConnection}}
+    <details class="tdi-panel" open><summary>Connect Ollama</summary><p>Run Ollama on the computer where you open Foundry in your browser. Install a vision model, for example <code>ollama pull gemma3:4b</code>. Use <code>http://127.0.0.1:11434/v1</code> as the endpoint and <code>gemma3:4b</code> as the model name. Leave the API key empty.</p><p>Click Test model connection, then choose Model extraction on the Source tab. If your browser blocks the connection, run the local companion below. The built-in image reader needs no Ollama setup.</p></details>
+    <div class="tdi-connection-grid">
+      <section class="tdi-panel"><h2>Extraction model</h2><p>Use a local model or a compatible chat-completions provider. Screenshots need a vision-capable model.</p>
+        <label>Endpoint base URL<input name="endpoint" type="url" value="{{config.endpoint}}" placeholder="http://127.0.0.1:11434/v1"></label>
+        <label>Model name<input name="model" type="text" value="{{config.model}}" placeholder="The exact model name installed or offered by your provider"></label>
+        <label>API key <span class="tdi-muted">optional for local models</span><input name="apiKey" type="password" autocomplete="off" placeholder="{{#if hasAPIKey}}Session key is set; enter a new key to replace it{{else}}Kept only in this window's memory{{/if}}"></label>
+        <label>Maximum output tokens<input name="maxTokens" type="number" min="1024" max="32768" value="{{config.maxTokens}}"></label>
+        <label class="tdi-checkbox"><input name="jsonMode" type="checkbox" {{#if config.jsonMode}}checked{{/if}}> Request JSON response format</label>
+        <p class="tdi-hint">Disable JSON response format if your model server does not support it. Source content and attached images go to this endpoint when you choose model extraction.</p>
+      </section>
+      <section class="tdi-panel"><h2>Optional local companion</h2><p>The included Python companion fetches readable web pages and forwards model requests when browser CORS blocks them.</p>
+        <label>Companion URL<input name="bridge" type="url" value="{{config.bridge}}" placeholder="http://127.0.0.1:8765"></label>
+        <label>Companion token<input name="bridgeToken" type="password" autocomplete="off" placeholder="{{#if hasBridgeToken}}Session token is set{{else}}Copy the token printed by the companion{{/if}}"></label>
+        <p class="tdi-hint">Run companion/start-windows.bat or companion/start.sh on your computer. Enter the exact Foundry origin shown in your browser. Leave the companion window open.</p>
+        <p class="tdi-hint">Endpoint/model settings are saved for this browser. Keys and tokens are cleared when this importer window closes. The companion requires Python 3.10 or newer.</p>
+        <div class="tdi-toolbar"><button type="button" data-action="testConnection" {{#if busy}}disabled{{/if}}>Test model connection</button><button type="button" data-action="saveConnection" {{#if busy}}disabled{{/if}}>Save connection settings</button><button type="button" data-action="clearKeys" {{#if busy}}disabled{{/if}}>Clear session keys</button></div>
+      </section>
+    </div>
+    {{/if}}
+    {{#if isHistory}}
+      <div class="tdi-review-heading"><div><h2>Import history</h2><p>Undo removes this batch's unedited documents. Existing content is preserved.</p></div></div>
+      {{#if result}}<p class="tdi-alert ready">Created {{result.created.length}} documents · reused {{result.reused.length}} existing entries.</p>{{/if}}
+      {{#each history}}<article class="tdi-history-entry"><div><h3>{{dateLabel}}</h3><p>{{status}} · {{count}} created documents remaining · {{reusedCount}} reused</p>{{#if error}}<p class="tdi-issue error">{{error}}</p>{{/if}}{{#each warnings}}<p class="tdi-issue review">{{this}}</p>{{/each}}</div>{{#if canUndo}}<button type="button" data-action="undo" data-id="{{id}}" {{#if ../busy}}disabled{{/if}}>Undo batch</button>{{/if}}<details><summary>Documents</summary>{{#each created}}<button type="button" class="tdi-link" data-action="openDocument" data-uuid="{{uuid}}">{{name}}</button>{{/each}}</details></article>{{else}}<div class="tdi-empty"><i class="fa-solid fa-clock-rotate-left"></i><h2>No imports yet</h2><p>Completed batches and failed imports are recorded here.</p></div>{{/each}}
+    {{/if}}
+  </main>
+  <footer class="tdi-footer"><span>Foundry v14 · D&D5e 5.3.3–5.x · Midi-QOL 14</span><div>{{#if busy}}<span class="tdi-working"><i class="fa-solid fa-spinner fa-spin"></i> Working</span>{{#if cancelable}}<button type="button" data-action="cancel">Cancel analysis</button>{{/if}}{{else}}{{#if isSource}}<button type="button" class="tdi-primary" data-action="analyze"><i class="fa-solid fa-wand-magic-sparkles"></i> Analyze source</button>{{/if}}{{#if isReview}}<button type="button" class="tdi-primary" data-action="importSelected" {{#unless canImport}}disabled{{/unless}}><i class="fa-solid fa-file-import"></i> Import selected</button>{{/if}}{{/if}}</div></footer>
+</div>

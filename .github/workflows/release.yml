@@ -1,0 +1,74 @@
+name: Publish Foundry module
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - module.json
+      - package.json
+      - scripts/**
+      - styles/**
+      - templates/**
+      - companion/**
+      - examples/**
+      - tests/**
+      - tools/**
+      - vendor/**
+      - .github/workflows/release.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: importer-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Restore pinned image reader
+        run: python3 tools/fetch-vendor.py
+      - name: Validate module and run regression checks
+        run: |
+          node tools/check.mjs
+          node --test tests/*.test.mjs
+          python3 -m unittest discover -s companion -p 'test_*.py' -v
+      - name: Check publication URLs
+        run: |
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          module=json.loads(Path('module.json').read_text())
+          repository='https://github.com/'+os.environ['GITHUB_REPOSITORY']
+          version=module['version']
+          assert module['manifest']==repository+'/releases/latest/download/module.json'
+          assert module['download']==repository+'/releases/download/v'+version+'/telys-dnd-importer-'+version+'.zip'
+          PY
+      - name: Package installable module
+        run: python3 tools/package.py
+      - name: Publish immutable release and Foundry manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(node -p "JSON.parse(require('fs').readFileSync('module.json','utf8')).version")
+          tag="v$version"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists; increment the module version before publishing another build."
+            exit 1
+          fi
+          gh release create "$tag" \
+            "../deliverables/telys-dnd-importer-$version.zip" \
+            "module.json" \
+            --target "$GITHUB_SHA" \
+            --title "Tely's DND Importer $version" \
+            --notes-file RELEASE-NOTES.md \
+            --latest

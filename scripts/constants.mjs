@@ -1,6 +1,6 @@
 export const ID = "telys-dnd-importer";
 export const TITLE = "Tely's DND Importer";
-export const VERSION = "0.1.3";
+export const VERSION = "0.1.4";
 export const KINDS = ["creature", "character", "spell", "weapon", "equipment", "consumable", "tool", "loot", "container", "feat", "background", "race", "class", "subclass", "facility", "journal", "table"];
 export const ABILITIES = {strength:"str", dexterity:"dex", constitution:"con", intelligence:"int", wisdom:"wis", charisma:"cha"};
 export const DAMAGE_TYPES = ["acid","bludgeoning","cold","fire","force","lightning","necrotic","piercing","poison","psychic","radiant","slashing","thunder"];

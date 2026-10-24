@@ -1,6 +1,6 @@
 # Tely's DND Importer
 
-**0.1.3 — an installable development build for Foundry v14 and D&D5e 5.3.3–5.x or 6.x (schema reviewed against 6.0.6). Midi-QOL is optional.**
+**0.1.4 — an installable development build for Foundry v14 and D&D5e 5.3.3–5.x or 6.x (schema reviewed against 6.0.6). Midi-QOL is optional.**
 
 Import D&D content from pasted text, image attachments, and public web links. A bundled English OCR reader reads clear screenshots locally without an account, model, companion, API key, or runtime download. Optional Ollama or compatible vision extraction handles more complex layouts. The importer extracts a reviewable intermediate format and compiles supported mechanics into native D&D5e activities, Active Effects, advancement, and Midi-QOL data. Original source text accompanies the imported document.
 
@@ -20,11 +20,15 @@ For future published releases, use Foundry's **Check for Update / Update** contr
 
 For manual installation, extract the release ZIP and put its `telys-dnd-importer` directory in `Data/modules/`, then restart Foundry.
 
+### Compendium indexing fix in 0.1.4
+
+Fixes the repeated `Cannot use 'in' operator to search for 'rules' in 1` error while analyzing with **Match installed compendiums** enabled. The importer now respects parent fields that D&D5e or other modules already index, requests only uncovered metadata, and uses document-appropriate field requests. Matching stays enabled, and 2014/2024 edition checks, feature identity and duplicate reuse are retained. Update from Foundry Setup, then relaunch the world to clear the previous session's failed requests.
+
 ### Optional Midi-QOL automation
 
 The importer opens and imports native actors, items, activities, effects and advancement without Midi-QOL. Its window, review, and batch history report unavailable automation. Automatic attack/save chains, repeat-save/ongoing-damage effects, Magic Resistance flags and fixed Multiattack sequences need a compatible, enabled Midi-QOL with a working runtime API. If you want those features, enable the matching automation version and analyze again before importing. Content imported without Midi may need reimporting after enabling it to restore fields supplied by Midi's schemas.
 
-If upgrading from 0.1.2, return to Foundry Setup and update the importer to **0.1.3**, then relaunch the world. The old mandatory dependency is part of the installed manifest; reloading the world without updating that package will not remove it.
+If upgrading from 0.1.2, return to Foundry Setup and update the importer to **0.1.4**, then relaunch the world. The old mandatory dependency is part of the installed manifest; reloading the world without updating that package will not remove it.
 
 Match your D&D5e and automation versions:
 

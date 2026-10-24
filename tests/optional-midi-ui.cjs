@@ -15,6 +15,22 @@ const ID="telys-dnd-importer",f=testEnvironment(),once=new Map(),listeners=new M
 const template=Handlebars.compile(await (await fetch("/modules/telys-dnd-importer/templates/importer.hbs")).text());
 globalThis.game=f.env.game;game.system.version="6.0.6";game.modules.delete("midi-qol");game.modules.set(ID,{});
 globalThis.fixture=f;globalThis.messages=[];
+// D&D5e's real default Item index includes system.source. Exercise its
+// parent/child projection boundary during both Analyze and Import.
+game.packs.set("test.reference",{
+  collection:"test.reference",documentName:"Item",visible:true,locked:true,metadata:{label:"Reference projection"},
+  indexFields:new Set(["_id","name","type","system.source"]),
+  async getIndex({fields=[]}={}){
+    const projection={};
+    for(const path of [...this.indexFields,...fields]){
+      const parts=path.split(".");let target=projection;
+      for(const key of parts.slice(0,-1)){if(!(key in target))target[key]={};target=target[key];}
+      const key=parts.at(-1);if(!(key in target))target[key]=1;
+    }
+    return {contents:[{_id:"referenceSpell",name:"Index Projection Reference",type:"spell",system:{source:{rules:"2014"}}}]};
+  },
+  async getDocument(){throw Error("An unrelated reference document must not be loaded");}
+});
 game.settings={get:(_,key)=>key==="history"?[]:{},register(){},registerMenu(){}};
 game.keybindings={register(){}};
 globalThis.Hooks={once:(name,cb)=>once.set(name,cb),on:(name,cb)=>listeners.set(name,cb)};
@@ -89,6 +105,7 @@ async function main(){
     await page.locator('[data-action="analyze"]').click();
     await page.waitForFunction(()=>app.view==="review"&&!app.busy);
     assert.equal(await page.evaluate(()=>app.error),"");
+    assert.deepEqual(await page.evaluate(()=>app.plan.resolver.failures),[]);
     assert.equal(await page.locator('[data-action="importSelected"]').isEnabled(),true);
     assert.equal(await page.evaluate(()=>app.plan.nodes[0].data.system.attributes.hp.max),45);
     await page.screenshot({path:path.join(output,"importer-optional-midi-review.png")});
@@ -97,6 +114,7 @@ async function main(){
     await page.waitForFunction(()=>app.view==="history"&&!app.busy);
     assert.equal(await page.evaluate(()=>app.error),"");
     assert.equal(await page.evaluate(()=>fixture.store.Actor.size),1);
+    assert.ok(!(await page.evaluate(()=>app.result.warnings.join(" "))).includes("Compendium unavailable"));
     assert.match(await page.locator(".tdi-history-entry").innerText(),/Midi automation unavailable/);
     await page.locator('[data-action="undo"]').click();
     await page.waitForFunction(()=>!app.busy&&fixture.store.Actor.size===0);
@@ -110,7 +128,7 @@ async function main(){
     assert.equal(await page.locator(".tdi-automation-status").innerText(),"Midi-QOL automation available");
     assert.deepEqual(await page.evaluate(()=>messages),[]);
     assert.deepEqual(errors,[]);
-    console.log("PASS: actual module boot, Analyze, native Import, persisted warnings and Undo without Midi; disabled/incompatible/failed-startup/ready status rendering.");
+    console.log("PASS: actual module boot, Analyze/Import with a D&D5e-shaped index projection, persisted warnings and Undo without Midi; disabled/incompatible/failed-startup/ready status rendering.");
   }finally{
     await browser?.close();await new Promise(resolve=>server.close(resolve));
   }

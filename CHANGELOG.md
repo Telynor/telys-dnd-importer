@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.4
+
+- Fixed overlapping compendium index requests that triggered `Cannot use 'in' operator to search for 'rules' in 1` under D&D5e. Already indexed parent fields now supply their descendants without redundant requests.
+- Request D&D5e system metadata only for Actor/Item packs; journal and table matching continues through importer metadata.
+- Preserved edition-aware reuse, feature contexts, selective full-document reads and reporting of genuinely unavailable packs.
+- Added projection-boundary regression tests and extended the actual browser Analyze/Import check with D&D5e-shaped default index fields.
+- Midi-QOL remains optional. Live Foundry acceptance remains pending.
+
 ## 0.1.3
 
 - Removed the mandatory Midi-QOL package dependency that prevented enabling and saving the importer.

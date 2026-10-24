@@ -3,6 +3,21 @@ import {clone, featureContext, mapLimit, normalizeName, randomID} from "./utils.
 
 const rulesOf = doc => doc.system?.source?.rules??doc.system?.details?.source?.rules??doc.flags?.[ID]?.rules;
 const keyOf=(documentName,type,name,rules,context="")=>JSON.stringify([documentName,["Actor","Item"].includes(documentName)?type??"":"",normalizeName(name),rules??"",context]);
+function additionalIndexFields(pack,env){
+  const fields=[`flags.${ID}.rules`,`flags.${ID}.featureContext`];
+  if(["Actor","Item"].includes(pack.documentName))fields.push("type","system.source.rules");
+  if(pack.documentName==="Actor")fields.push("system.details.source.rules");
+  if(pack.documentName==="Item")fields.push("system.identifier","system.type.value","system.requirements");
+  const indexed=new Set([
+    ...(pack.indexFields??[]),
+    ...(env.CONFIG?.[pack.documentName]?.compendiumIndexFields??[]),
+    ...(pack.documentClass?.metadata?.compendiumIndexFields??[])
+  ]);
+  // D&D5e already indexes the whole system.source object. Asking Foundry to
+  // select source AND source.rules collides in its numeric field projection.
+  // Parent fields already supply their descendants; leave that selection alone.
+  return fields.filter(field=>![...indexed].some(parent=>field===parent||field.startsWith(`${parent}.`)));
+}
 export class ContentResolver {
   constructor(env=globalThis){this.env=env;this.index=new Map();this.failures=[];this.loaded=false;}
   add(record) {const key=keyOf(record.documentName,record.type,record.name,record.rules,record.context);if(!this.index.has(key))this.index.set(key,[]);this.index.get(key).push(record);}
@@ -16,7 +31,7 @@ export class ContentResolver {
       const packs=[...(game.packs?.values?.()??[])].filter(p=>["Actor","Item","JournalEntry","RollTable"].includes(p.documentName)&&p.visible!==false);
       await mapLimit(packs,3,async pack=>{
         if(signal?.aborted)throw new DOMException("Cancelled","AbortError");
-        try {const index=await pack.getIndex({fields:["type","system.source.rules","system.details.source.rules","system.identifier","system.type.value","system.requirements",`flags.${ID}.rules`,`flags.${ID}.featureContext`]});
+        try {const index=await pack.getIndex({fields:additionalIndexFields(pack,this.env)});
           for(const item of index.contents??index)this.add({name:item.name,type:item.type,documentName:pack.documentName,rules:rulesOf(item),context:featureContext(item),uuid:item.uuid??`Compendium.${pack.collection}.${pack.documentName}.${item._id}`,pack,id:item._id,world:false});
         }catch(error){this.failures.push(`${pack.metadata?.label??pack.collection}: ${error.message}`);}
       });

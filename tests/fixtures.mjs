@@ -4,6 +4,7 @@ export function testEnvironment(){
   const store={Actor:new Map(),Item:new Map(),JournalEntry:new Map(),RollTable:new Map(),Folder:new Map()},history=[];
   const collection=name=>({get contents(){return [...store[name].values()];}});
   const env={game:{version:"14.368",user:{id:"gm1",isGM:true},system:{id:"dnd5e",version:"5.3.3"},modules:new Map([["midi-qol",{active:true,version:"14.0.16"}]]),actors:collection("Actor"),items:collection("Item"),journal:collection("JournalEntry"),tables:collection("RollTable"),folders:collection("Folder"),packs:new Map()},CONFIG:{}};
+  env.MidiQOL={completeItemUse:async()=>({aborted:false})};
   let createdCount=0;
   const adapter={
     failAt:0,historyError:false,

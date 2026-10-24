@@ -7,3 +7,6 @@ node_modules/
 /vendor/ocr/lang/
 /vendor/ocr/tesseract.esm.min.js
 /vendor/ocr/worker.min.js
+
+# Browser verification screenshots
+artifacts/

@@ -11,6 +11,6 @@ OUT.mkdir(exist_ok=True)
 
 with ZipFile(OUT / f"telys-dnd-importer-{VERSION}.zip", "w", ZIP_DEFLATED) as archive:
     for path in sorted(ROOT.rglob("*")):
-        if path.is_file() and not any(part in {"__pycache__", ".git", "node_modules", "dist"} for part in path.relative_to(ROOT).parts):
+        if path.is_file() and not any(part in {"__pycache__", ".git", "node_modules", "dist", "artifacts"} for part in path.relative_to(ROOT).parts):
             archive.write(path, Path(ROOT.name) / path.relative_to(ROOT))
 print(OUT / f"telys-dnd-importer-{VERSION}.zip")

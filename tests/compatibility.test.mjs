@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {compileBundle} from "../scripts/compiler.mjs";
 import {adaptDocumentForSystem,supportedSystem} from "../scripts/compatibility.mjs";
-import {FoundryAdapter,ImportService,checkEnvironment} from "../scripts/importer.mjs";
+import {FoundryAdapter,ImportService,checkEnvironment,checkAutomation} from "../scripts/importer.mjs";
 import {parseText} from "../scripts/parser.mjs";
 import {normalizeBundle} from "../scripts/schema.mjs";
 import {testEnvironment,classEntry} from "./fixtures.mjs";
@@ -11,24 +11,26 @@ const creature=parseText(await readFile(new URL("../examples/training-creature.t
 const compile6=bundle=>compileBundle(bundle,{systemVersion:"6.0.6"});
 function environment6(){const f=testEnvironment();f.env.game.system.version="6.0.6";f.env.game.modules.get("midi-qol").version="14.6.0";return f;}
 
-test("the released manifest allows the user's D&D5e 6.0.6 and Midi-QOL 14.6.0",async()=>{
+test("the released manifest allows D&D5e 6.0.6 without a mandatory automation dependency",async()=>{
   const manifest=JSON.parse(await readFile(new URL("../module.json",import.meta.url),"utf8"));
   assert.equal(manifest.relationships.systems[0].compatibility.maximum,"6.999");
-  assert.equal(manifest.relationships.requires[0].compatibility.maximum,"14.999");
+  assert.ok(!manifest.relationships.requires?.length);
   assert.deepEqual(checkEnvironment(environment6().env),[]);
+  assert.deepEqual(checkAutomation(environment6().env),[]);
 });
 test("version checks reject missing, malformed, too-old, and next-major systems",()=>{
   for(const v of [undefined,"","5","5.x.y","5.2.9","5.3.2","4.4.4","7.0.0"])assert.equal(supportedSystem(v),false,String(v));
   for(const v of ["5.3.3","5.4.0","6.0.0","6.0.6"])assert.equal(supportedSystem(v),true,v);
 });
-test("D&D5e 6 rejects Midi-QOL 14.0 instead of silently offering broken automation",()=>{
+test("D&D5e 6 reports incompatible Midi-QOL 14.0 without blocking imports",()=>{
   const {env}=environment6();env.game.modules.get("midi-qol").version="14.0.15";
-  assert.ok(checkEnvironment(env).some(x=>x.includes("requires Midi-QOL 14.6")));
+  assert.deepEqual(checkEnvironment(env),[]);
+  assert.ok(checkAutomation(env).some(x=>x.includes("requires Midi-QOL 14.6")));
 });
 test("D&D5e 5 retains its previous Midi-QOL release line",()=>{
   const {env}=testEnvironment();assert.deepEqual(checkEnvironment(env),[]);
   env.game.modules.get("midi-qol").version="14.6.0";
-  assert.ok(checkEnvironment(env).some(x=>x.includes("requires the Midi-QOL 14.0 line")));
+  assert.ok(checkAutomation(env).some(x=>x.includes("requires the Midi-QOL 14.0 line")));
 });
 test("D&D5e 6 fixed AC and movement use persisted fields",()=>{
   const actor=compile6(creature).nodes[0].data;

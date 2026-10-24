@@ -1,6 +1,6 @@
 import {ID,TITLE,VERSION} from "./constants.mjs";
 import {ImporterApp,DEFAULT_CONFIG} from "./ui.mjs";
-import {ImportService,checkEnvironment} from "./importer.mjs";
+import {ImportService,checkEnvironment,checkAutomation} from "./importer.mjs";
 import {parseText} from "./parser.mjs";
 import {normalizeBundle} from "./schema.mjs";
 import {compileBundle} from "./compiler.mjs";
@@ -14,12 +14,12 @@ export function openImporter() {
 Hooks.once("init",()=>{
   game.settings.register(ID,"connection",{scope:"client",config:false,type:Object,default:DEFAULT_CONFIG});
   game.settings.register(ID,"history",{scope:"world",config:false,type:Array,default:[]});
-  game.settings.registerMenu(ID,"importer",{name:TITLE,label:"Open DND Importer",hint:"Import text, images, and web pages with Midi-QOL automation.",icon:"fa-solid fa-file-import",type:ImporterApp,restricted:true});
+  game.settings.registerMenu(ID,"importer",{name:TITLE,label:"Open DND Importer",hint:"Import text, images, and web pages. Midi-QOL automation is optional.",icon:"fa-solid fa-file-import",type:ImporterApp,restricted:true});
   game.keybindings.register(ID,"open",{name:`Open ${TITLE}`,restricted:true,editable:[],onDown:()=>{openImporter();return true;}});
 });
 Hooks.once("ready",()=>{
   const service=new ImportService();
-  game.modules.get(ID).api=Object.freeze({version:VERSION,open:openImporter,parseText,normalizeBundle,compileBundle,checkEnvironment,prepare:(bundle,options)=>service.prepare(bundle,options),import:(plan,options)=>service.commit(plan,options),undo:id=>service.undo(id)});
+  game.modules.get(ID).api=Object.freeze({version:VERSION,open:openImporter,parseText,normalizeBundle,compileBundle,checkEnvironment,checkAutomation,prepare:(bundle,options)=>service.prepare(bundle,options),import:(plan,options)=>service.commit(plan,options),undo:id=>service.undo(id)});
   registerHandlers();
 });
 function addDirectoryButton(application,html) {

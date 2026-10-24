@@ -1,9 +1,11 @@
 import {ID} from "./constants.mjs";
 import {escapeHTML, normalizeName} from "./utils.mjs";
+import {checkAutomation} from "./importer.mjs";
 
 const inFlight=new Set();
 export function registerHandlers(env=globalThis) {
   env.Hooks.on("midi-qol.RollComplete",workflow=>{
+    if(checkAutomation(env).length)return;
     // Hooks do not await async listeners. Contain rejections explicitly.
     void runMultiattack(workflow,env).catch(error=>env.ui.notifications.error(`Tely's DND Importer: ${error.message}`));
   });

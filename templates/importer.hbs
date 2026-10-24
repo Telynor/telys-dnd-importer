@@ -1,7 +1,7 @@
 <div class="tdi-shell">
   <header class="tdi-masthead">
     <div class="tdi-mark"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-    <div><p class="tdi-eyebrow">FROM SOURCE TO SHEET</p><h1>{{title}}</h1><p>Text, images & links · Native D&D5e content · Midi-QOL automation</p></div>
+    <div><p class="tdi-eyebrow">FROM SOURCE TO SHEET</p><h1>{{title}}</h1><p>Text, images & links · Native D&D5e content · Optional Midi-QOL automation</p></div>
     <span class="tdi-version">{{version}}</span>
   </header>
   <nav class="tdi-nav" aria-label="Importer sections">
@@ -9,6 +9,9 @@
   </nav>
   <div class="tdi-notices" aria-live="polite">
     {{#each environmentErrors}}<p class="tdi-alert error">{{this}}</p>{{/each}}
+    {{#if automationIssues}}
+    <div class="tdi-alert review tdi-automation-status"><strong>Midi automation unavailable · Importing is available</strong><p>Text, image reading, model extraction, and native imports still work. Linked attack/save automation, repeat-save effects, and automatic Multiattack need compatible Midi-QOL. Enable it and analyze again before importing if you want those features.</p>{{#each automationIssues}}<p>{{this}}</p>{{/each}}</div>
+    {{else}}<p class="tdi-alert ready tdi-automation-status">Midi-QOL automation available</p>{{/if}}
     {{#if error}}<p class="tdi-alert error">{{error}}</p>{{/if}}
     <p class="tdi-status" role="status">{{status}}</p>
   </div>
@@ -95,5 +98,5 @@
       {{#each history}}<article class="tdi-history-entry"><div><h3>{{dateLabel}}</h3><p>{{status}} · {{count}} created documents remaining · {{reusedCount}} reused</p>{{#if error}}<p class="tdi-issue error">{{error}}</p>{{/if}}{{#each warnings}}<p class="tdi-issue review">{{this}}</p>{{/each}}</div>{{#if canUndo}}<button type="button" data-action="undo" data-id="{{id}}" {{#if ../busy}}disabled{{/if}}>Undo batch</button>{{/if}}<details><summary>Documents</summary>{{#each created}}<button type="button" class="tdi-link" data-action="openDocument" data-uuid="{{uuid}}">{{name}}</button>{{/each}}</details></article>{{else}}<div class="tdi-empty"><i class="fa-solid fa-clock-rotate-left"></i><h2>No imports yet</h2><p>Completed batches and failed imports are recorded here.</p></div>{{/each}}
     {{/if}}
   </main>
-  <footer class="tdi-footer"><span>Foundry v14 · D&D5e 5.3.3–5.x / 6.x · Midi-QOL 14</span><div>{{#if busy}}<span class="tdi-working"><i class="fa-solid fa-spinner fa-spin"></i> Working</span>{{#if cancelable}}<button type="button" data-action="cancel">Cancel analysis</button>{{/if}}{{else}}{{#if isSource}}<button type="button" class="tdi-primary" data-action="analyze"><i class="fa-solid fa-wand-magic-sparkles"></i> Analyze source</button>{{/if}}{{#if isReview}}<button type="button" class="tdi-primary" data-action="importSelected" {{#unless canImport}}disabled{{/unless}}><i class="fa-solid fa-file-import"></i> Import selected</button>{{/if}}{{/if}}</div></footer>
+  <footer class="tdi-footer"><span>Foundry v14 · D&D5e 5.3.3–5.x / 6.x · Optional Midi-QOL 14</span><div>{{#if busy}}<span class="tdi-working"><i class="fa-solid fa-spinner fa-spin"></i> Working</span>{{#if cancelable}}<button type="button" data-action="cancel">Cancel analysis</button>{{/if}}{{else}}{{#if isSource}}<button type="button" class="tdi-primary" data-action="analyze"><i class="fa-solid fa-wand-magic-sparkles"></i> Analyze source</button>{{/if}}{{#if isReview}}<button type="button" class="tdi-primary" data-action="importSelected" {{#unless canImport}}disabled{{/unless}}><i class="fa-solid fa-file-import"></i> Import selected</button>{{/if}}{{/if}}</div></footer>
 </div>

@@ -53,6 +53,18 @@ jobs:
           assert module['manifest']==repository+'/releases/latest/download/module.json'
           assert module['download']==repository+'/releases/download/v'+version+'/telys-dnd-importer-'+version+'.zip'
           PY
+      - name: Check importer loading and native import without Midi-QOL in Chromium
+        run: |
+          npm install --no-save --package-lock=false --no-audit --no-fund playwright@1.64.1 handlebars@4.7.10
+          npx playwright install --with-deps chromium --only-shell
+          node tests/optional-midi-ui.cjs
+      - name: Upload importer browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: importer-optional-midi
+          path: artifacts/importer-optional-midi-*.png
+          if-no-files-found: ignore
       - name: Package installable module
         run: python3 tools/package.py
       - name: Publish immutable release and Foundry manifest

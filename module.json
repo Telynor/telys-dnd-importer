@@ -1,8 +1,8 @@
 {
   "id": "telys-dnd-importer",
   "title": "Tely's DND Importer",
-  "description": "Import D&D content from text, images, and web links with D&D5e activities and Midi-QOL automation.",
-  "version": "0.1.2",
+  "description": "Import D&D content from text, images, and web links with native D&D5e activities and optional Midi-QOL automation.",
+  "version": "0.1.3",
   "authors": [
     {
       "name": "Telynor"
@@ -23,16 +23,6 @@
           "maximum": "6.999"
         }
       }
-    ],
-    "requires": [
-      {
-        "id": "midi-qol",
-        "type": "module",
-        "compatibility": {
-          "minimum": "14.0.0",
-          "maximum": "14.999"
-        }
-      }
     ]
   },
   "esmodules": [
@@ -45,7 +35,7 @@
   "license": "LICENSE",
   "url": "https://github.com/Telynor/telys-dnd-importer",
   "manifest": "https://github.com/Telynor/telys-dnd-importer/releases/latest/download/module.json",
-  "download": "https://github.com/Telynor/telys-dnd-importer/releases/download/v0.1.2/telys-dnd-importer-0.1.2.zip",
+  "download": "https://github.com/Telynor/telys-dnd-importer/releases/download/v0.1.3/telys-dnd-importer-0.1.3.zip",
   "readme": "https://github.com/Telynor/telys-dnd-importer/blob/main/README.md",
   "bugs": "https://github.com/Telynor/telys-dnd-importer/issues",
   "changelog": "https://github.com/Telynor/telys-dnd-importer/blob/main/CHANGELOG.md"

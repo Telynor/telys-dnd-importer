@@ -16,15 +16,25 @@ export function checkEnvironment(env=globalThis) {
   if(game?.system?.id!=="dnd5e")errors.push("This importer requires the D&D5e system.");
   const major=Number(String(game?.version??game?.release?.version??"").split(".")[0]);
   if(major!==14)errors.push("This release targets Foundry v14.");
-  const system=versionParts(game?.system?.version);
   if(!supportedSystem(game?.system?.version))errors.push("This release supports D&D5e 5.3.3–5.x and 6.x (schema reviewed against 6.0.6).");
-  const midi=game?.modules?.get("midi-qol");
-  const midiVersion=versionParts(midi?.version);
-  if(!midi?.active||midiVersion?.[0]!==14)errors.push("Enable a compatible Midi-QOL 14 version and its dependencies.");
-  else if(system?.[0]===6&&midiVersion[1]<6)errors.push("D&D5e 6 requires Midi-QOL 14.6 or later in the v14 line, with its compatible dependencies. Install that line using the manifest linked in the importer's README.");
-  else if(system?.[0]===5&&midiVersion[1]>=6)errors.push("D&D5e 5 requires the Midi-QOL 14.0 line; Midi-QOL 14.6 targets D&D5e 6.");
   return errors;
 }
+
+// Optional automation must never prevent loading, extraction, or native imports.
+// Check the live API as well as the package: a checked module can fail at startup.
+export function checkAutomation(env=globalThis) {
+  const game=env.game,system=versionParts(game?.system?.version);
+  const midi=game?.modules?.get("midi-qol");
+  if(!midi)return ["Midi-QOL is not installed."];
+  if(!midi.active)return ["Midi-QOL is installed but is not enabled in this world."];
+  const midiVersion=versionParts(midi?.version);
+  if(midiVersion?.[0]!==14)return ["Midi automation needs a compatible Midi-QOL 14 version and its dependencies."];
+  if(system?.[0]===6&&midiVersion[1]<6)return ["D&D5e 6 requires Midi-QOL 14.6 or later in the v14 line for automation, with its compatible dependencies. The README links the matching Midi-QOL and DAE manifests."];
+  if(system?.[0]===5&&midiVersion[1]>=6)return ["D&D5e 5 requires the Midi-QOL 14.0 line for automation; Midi-QOL 14.6 targets D&D5e 6."];
+  if(typeof env.MidiQOL?.completeItemUse!=="function")return ["Midi-QOL is enabled but its item-use API is unavailable. Check its startup errors and required modules."];
+  return [];
+}
+const automationWarnings=env=>checkAutomation(env).map(issue=>`Midi automation unavailable: ${issue} Native content can still be imported. Linked attack/save automation, repeat-save effects, and automatic Multiattack need compatible Midi-QOL; enable it and analyze again before importing if you want those features.`);
 export class FoundryAdapter {
   constructor(env=globalThis){this.env=env;}
   async history(){return clone(this.env.game.settings.get(ID,"history")??[]);}
@@ -85,7 +95,7 @@ export class ImportService {
     const bases=new Map();
     async function baseWalk(entry,parent="") {const key=parent?`${parent}/${entry.id}`:entry.id;const base=await resolver.baseFor(entry);if(base)bases.set(key,base);for(const child of entry.features)await baseWalk(child,key);}
     for(const entry of bundle.entries)await baseWalk(entry);
-    const plan=compileBundle(bundle,{bases,systemVersion:this.env.game.system.version});plan.bundle=bundle;plan.id=randomID();plan.resolver=resolver;plan.includePacks=includePacks;plan.warnings=[...bundle.warnings,...resolver.failures.map(x=>`Compendium unavailable: ${x}`)];
+    const plan=compileBundle(bundle,{bases,systemVersion:this.env.game.system.version});plan.bundle=bundle;plan.id=randomID();plan.resolver=resolver;plan.includePacks=includePacks;plan.warnings=[...bundle.warnings,...automationWarnings(this.env),...resolver.failures.map(x=>`Compendium unavailable: ${x}`)];
     // D&D5e 6 ItemGrant uses DocumentUUIDField. Validate prospective UUIDs,
     // then resolve the original placeholders to actual destinations at commit.
     const previewUUIDs=new Map(plan.nodes.map(n=>[n.key,`${n.documentName}.${n.data._id}`]));
@@ -115,7 +125,7 @@ export class ImportService {
     if(fingerprint(plan)!==plan.fingerprint)throw new Error("The import plan changed. Analyze it again before importing.");
     let nodes=this.selectedNodes(plan,selected);if(!nodes.length)throw new Error("Select at least one entry.");
     activeWrites.add(this.lockKey);
-    const record={id:randomID(),version:VERSION,date:new Date().toISOString(),userId:this.env.game.user.id,status:"pending",created:[],folders:[],reused:[],warnings:[]};
+    const record={id:randomID(),version:VERSION,date:new Date().toISOString(),userId:this.env.game.user.id,status:"pending",created:[],folders:[],reused:[],warnings:automationWarnings(this.env)};
     let history,historySaved=false;
     const persist=async()=>{const old=await this.adapter.history();history=[record,...old.filter(x=>x.id!==record.id)];await this.adapter.saveHistory(history);historySaved=true;};
     try {

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.3
+
+- Removed the mandatory Midi-QOL package dependency that prevented enabling and saving the importer.
+- Native imports, OCR, model extraction, review and undo work without Midi-QOL. Incompatible or unavailable Midi is reported separately in the window, preview, API and batch history.
+- Midi-dependent handlers check compatibility and the live API when a workflow arrives, so loading order cannot disable an otherwise working integration.
+- Added regression coverage for absent, disabled, wrong-version and failed-startup Midi, including actual importer boot and UI import paths.
+- Live Foundry document creation and combat acceptance remain pending.
+
 ## 0.1.2
 
 - Fixed the system compatibility cap that blocked D&D5e 6.0.6, and allowed its Midi-QOL 14.6 release line. Runtime checks explain mismatched automation versions.
